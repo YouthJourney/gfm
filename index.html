@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>GFM 功夫梦</title>
+	<meta charset="utf-8">
+	<!-- <meta name="viewport" content="width=device-width, initial-scale=1"> -->
+	<link id="colorSchemeStyle" rel="stylesheet" type="text/css" href="highlight-styles/monokai_sublime.css">
+	<style>
+		html,
+		body {margin:0; height: 100%; font-family: Microsoft Yahei; }
+		/* markdown style */
+		code { font-family: consolas, Microsoft Yahei; }
+		pre code {font-size: 14px; white-space: pre-wrap;  }
+		blockquote {border-left: 5px solid #eee; padding-left: 35px; margin-left: 0; }
+		table {border-collapse: collapse; }
+		td, th {padding:0.2em 0.5em; }
+		th {text-align: left; border-bottom: 2px solid #eee; }
+		/*.hljs.hljs { overflow: visible; display: table; min-width: 100%; }*/
+		/* layout */
+		.wrap { height: 100%; display:flex; align-items: stretch; }
+		.wrap > :nth-child(1) { width:540px; flex-grow:0; flex-shrink: 0; }
+		.wrap > :nth-child(2) {flex-grow: 1; overflow: auto;}
+ 		#toolbar {position: fixed; bottom:0; right:18px;}
+		select { border-radius: 0; border:1px solid #ddd; background-color: #fcfcfc;}
+ 		select:focus {outline:none; border-color:#aaa; }
+
+ 		#html { padding:10px 40px; box-sizing:border-box;   }
+ 		textarea {font-family: inherit; padding:20px; border:none; border-right: 1px solid #eee;  resize:horizontal; background-color:#fcfcfc; }
+ 		textarea:focus {outline:none; border-right-color:#ddd;}
+ 		textarea::-webkit-scrollbar{width:5px; height:5px;}
+		textarea::-webkit-scrollbar-track{border-radius:8px; background-color:rgba(0,0,0,0); }
+		textarea::-webkit-scrollbar-track:hover{background-color:rgba(0,0,0,0.06); }
+		textarea::-webkit-scrollbar-track:active{background-color:rgba(0,0,0,0.1)}
+		textarea::-webkit-scrollbar-thumb{border-radius:8px; background-color:rgba(0,0,0,.1); }
+		textarea::-webkit-scrollbar-thumb:hover{background-color:rgba(0,0,0,0.4)}
+		textarea::-webkit-scrollbar-thumb:active{background:rgba(0,0,0,0.6)}
+	</style>
+</head>
+<body>
+<div id="toolbar">
+	<select id="colorSchemeSelect">
+		<optgroup label="dark">
+			<option>monokai_sublime</option>
+			<option>solarized_dark</option>
+			<option>hybrid</option>
+		</optgroup>
+		<optgroup label="light">
+			<option>googlecode</option>
+			<option>github</option>
+			<option>xcode</option>
+		</optgroup>
+	</select>
+</div>
+<div class="wrap">	
+<textarea class="first" id="md" placeholder="Github Flavored Markdown here...">
+GFM 功夫梦，又一个 markdown 编辑器
+==================================
+
+> Github Flavored Markdown
+
+
+## 特性
+
+- 实时预览，代码自动换行，方便审阅
+- 支持 Github 风格的 markdown
+- 提供 6 套高质量代码高亮样式
+- ~~变更历史记录~~ 
+- 保存上一次编辑结果
+
+文本样式最小程度定义，你可以直接拷贝右边的文本贴到任何一个平台的编辑器里面而**不产生样式冲突**。
+
+如果你觉得编辑器宽度不够，中线最下方可以拖D
+
+_提示：当你没有离开页面的时候，可以随时使用 `ctrl+z` _
+
+## 代码高亮示意
+
+|暗色调|明色调|
+|------|------|
+|monokai_sublime | googlecode |  
+|solarized_dark  | github     |
+|hybrid          | xcode      |
+
+
+代码高亮示例，点击**右下角的按钮**进行样式切换
+
+```js
+var myMarked = {
+	htmlElm: document.getElementById('html'),
+	mdElm: document.getElementById('md'),
+	init: function() {
+		// this.bind();
+		this.convert();
+	},
+	bind: function() {
+		var self = this;
+		self.mdElm.addEventListener('keyup', self.convert);
+		self.mdElm.addEventListener('paste', function() {
+			setTimeout(self.convert, 0);
+		});
+		window.addEventListener('beforeunload', function() {
+			self.history('leave');
+		});
+	}
+}
+```
+</textarea>
+<div id="html"></div>
+</div>	
+<script src="marked.min.js"></script>
+<script src="highlight.pack.js"></script>
+
+<script >
+	marked.setOptions({
+	  // renderer: new marked.Renderer(),
+	  gfm: true,
+	  // tables: true,
+	  breaks: true,
+	  // pedantic: false,
+	  // sanitize: true,
+	  // smartLists: true,
+	  // smartypants: false
+	});
+
+	var myMarked = {
+		htmlElm: document.getElementById('html'),
+		mdElm: document.getElementById('md'),
+		init: function() {
+			this.bind();
+			this.reStore();
+			this.convert();
+		},
+		bind: function() {
+			var self = this;
+			self.mdElm.addEventListener('keyup', self.convert);
+			self.mdElm.addEventListener('paste', function() {
+				setTimeout(self.convert, 0);
+			});
+			window.addEventListener('beforeunload', function() {
+				self.history('leave');
+			});
+		},
+		convert: function() { 
+			var value = myMarked.mdElm.value;
+			myMarked.htmlElm.innerHTML = marked(value); 
+			hljs.initHighlighting.called = false;
+			hljs.initHighlighting();
+
+			// hljs 的样式和 flexbox 结合，当重新渲染的时候会有bug
+			// <pre><code> 在 flexbox 之内，且 code 为 display:block; overflow-x: auto; 时
+			// 当 flexbox 的 innerHTML 重新改变时, code 是无法滚动的
+			// 估计是跟 pre 相关
+			// 所以把样式放到 pre 上面
+			// -- 发现渲染还是有点问题，不能正确渲染 margin ---
+			// 不使用 flexbox 好了。
+			/* 
+			var hlNode = document.querySelectorAll('.hljs');
+			for (var i = hlNode.length - 1; i >= 0; i--) {
+				hlNode[i].classList.remove("hljs");
+				hlNode[i].parentNode.classList.add('hljs');
+			}
+			*/
+		},
+		reStore: function() {
+			 if (!localStorage.history) {
+			 	return false;
+			 }
+			 var history = myMarked.history();
+			 var content = history[history.length - 1]['content'];
+			 if (content === '') {
+			 		return false;
+			 }
+			 myMarked.mdElm.value = content;
+		},
+		history: function(type) {
+			if (!localStorage.history) {
+				localStorage.history = "[]"; 
+			}
+			var history = JSON.parse(localStorage.history);
+
+			if (arguments.length === 0) {
+				// read
+				return history;
+			} else {
+				// set
+				history.push( { 
+					'date': new Date().getTime(), 
+					'type': type,
+					'content': myMarked.mdElm.value 
+				});
+				localStorage.history = JSON.stringify(history);
+			}
+		}
+	}
+	var colorScheme = {
+		selectElem: document.getElementById('colorSchemeSelect'),
+		styleElem: document.getElementById('colorSchemeStyle'),
+		init: function() {
+			this.bind();
+			this.storage();
+			this.change();
+		},
+		bind: function() {
+			this.selectElem.addEventListener('change', this.change);
+		},
+		change: function() {
+			var value = colorScheme.selectElem.value;
+			colorScheme.styleElem.href = 'highlight-styles/'+value+'.css';
+			colorScheme.storage(value);
+		},
+		storage: function(value) {
+			if (arguments.length === 0) {
+				if (localStorage && localStorage.colorScheme) {
+					colorScheme.selectElem.value = localStorage.colorScheme; 
+				}
+			} else {
+				localStorage.colorScheme = value;
+			}
+		}
+	}
+	myMarked.init(); 
+	colorScheme.init(); 
+</script>
+
+</body>
+</html>
