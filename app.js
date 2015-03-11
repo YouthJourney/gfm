@@ -18,6 +18,7 @@ var myMarked = {
 		this.bind();
 		this.reStore();
 		this.convert();
+		this.mdElm.style.visibility = 'visible';
 	},
 	bind: function() {
 		var self = this;
